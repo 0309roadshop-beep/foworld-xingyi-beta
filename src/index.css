@@ -1,0 +1,3433 @@
+@import 'tailwindcss';
+@config '../tailwind.config.js';
+
+/* ─── FOWORLD · 万峰林色盘 ─── */
+@theme {
+  --color-void: #071218;
+  --color-void-950: #040d12;
+  --color-void-900: #071218;
+  --color-void-800: #0f2430;
+  --color-void-700: #152e3c;
+  --color-void-600: #1c3a4a;
+
+  --color-bronze: #2dd4a8;
+  --color-bronze-300: #5eecc4;
+  --color-bronze-400: #2dd4a8;
+  --color-bronze-500: #10b981;
+  --color-bronze-600: #059669;
+
+  --color-jade: #2dd4a8;
+  --color-jade-bright: #5eecc4;
+  --color-jade-muted: #10b981;
+
+  --color-sky: #38bdf8;
+  --color-sky-bright: #7dd3fc;
+  --color-sky-muted: #0ea5e9;
+
+  --color-gold-glow: #f5e06a;
+  --color-gold-bright: #fde68a;
+  --color-gold-muted: #e8c547;
+
+  --color-spirit: #34d399;
+  --color-spirit-dim: #065f46;
+
+  --color-mist: #e8f4f8;
+  --color-mist-muted: #94b8c8;
+  --color-mist-faint: #5a7a8a;
+
+  --font-sans: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, sans-serif;
+  --font-display: 'PingFang SC', 'STSong', 'SimSun', serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background-color: var(--color-void);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── 全局移动端防触控干扰（游戏 / AR / 交互区） ─── */
+body,
+#root,
+.game-container,
+.ar-screen,
+.ar-viewfinder,
+.interactive-area,
+.game-action-bar,
+canvas,
+video,
+img,
+button {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+body,
+#root,
+.game-container,
+.ar-screen,
+.ar-viewfinder,
+.interactive-area,
+.game-action-bar,
+canvas,
+video {
+  touch-action: none !important;
+}
+
+button {
+  touch-action: manipulation;
+}
+
+img,
+video {
+  -webkit-user-drag: none !important;
+  user-drag: none;
+  pointer-events: auto;
+}
+
+/* 表单输入区保留可选中与正常触控 */
+input,
+textarea,
+select,
+[contenteditable='true'] {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  -webkit-touch-callout: default;
+  touch-action: manipulation;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* ─── GPU 合成层：高频运动元素统一基类 ─── */
+.gpu-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+.gpu-motion {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* 扫描线扫过（子元素满高轨道，translateY 百分比相对轨道高度） */
+.scan-sweep-track {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.scan-sweep-line {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  top: 0;
+  bottom: 0;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  animation: scan-line-sweep 3.2s linear infinite;
+}
+
+.scan-sweep-line__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+}
+
+@keyframes scan-line-sweep {
+  0%,
+  100% {
+    transform: translate3d(0, 8%, 0);
+  }
+  50% {
+    transform: translate3d(0, 92%, 0);
+  }
+}
+
+@keyframes scan-line-sweep-tight {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, 100%, 0);
+  }
+}
+
+@keyframes scan-line-sweep-mid {
+  0%,
+  100% {
+    transform: translate3d(0, 18%, 0);
+  }
+  50% {
+    transform: translate3d(0, 78%, 0);
+  }
+}
+
+@keyframes scan-line-sweep-mythic {
+  0% {
+    transform: translate3d(0, -5%, 0);
+  }
+  100% {
+    transform: translate3d(0, 105%, 0);
+  }
+}
+
+.scan-sweep-line--tight {
+  animation: scan-line-sweep-tight 1s linear infinite;
+}
+
+.scan-sweep-line--mid {
+  animation: scan-line-sweep-mid 2.4s ease-in-out infinite;
+}
+
+.scan-sweep-line--mythic {
+  left: 0;
+  right: 0;
+  animation: scan-line-sweep-mythic 6s linear infinite;
+}
+
+/* 众星捧月 AR · 线框持续探测呼吸 */
+@keyframes zhongxing-wireframe-breathe {
+  0%,
+  100% {
+    opacity: 0.68;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.zhongxing-wireframe {
+  animation: zhongxing-wireframe-breathe 2.8s ease-in-out infinite;
+}
+
+.zhongxing-wireframe--active {
+  animation: zhongxing-wireframe-breathe 1.35s ease-in-out infinite;
+}
+
+.zhongxing-scanlines {
+  animation: zhongxing-wireframe-breathe 3.2s ease-in-out infinite reverse;
+}
+
+@keyframes photo-upload-scan {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate3d(0, calc(100% - 4px), 0);
+    opacity: 1;
+  }
+}
+
+@keyframes scroll-loading-bar {
+  0% {
+    transform: translate3d(0, 0, 0) scaleX(0.08);
+    transform-origin: left center;
+  }
+  50% {
+    transform: translate3d(20%, 0, 0) scaleX(0.6);
+    transform-origin: left center;
+  }
+  100% {
+    transform: translate3d(92%, 0, 0) scaleX(0.08);
+    transform-origin: left center;
+  }
+}
+
+.photo-scan-track {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.photo-upload-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 4px;
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  animation: photo-upload-scan 1.6s ease-in-out infinite;
+}
+
+.scroll-loading-bar {
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  animation: scroll-loading-bar 1.8s ease-in-out infinite;
+}
+
+/* 飞瀑集音 · 气泡 */
+.audio-catcher-bubble {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 1px solid rgba(125, 211, 252, 0.4);
+  background: linear-gradient(
+    to bottom right,
+    rgba(125, 211, 252, 0.5),
+    rgba(52, 211, 153, 0.3),
+    transparent
+  );
+  box-shadow: 0 0 12px rgba(120, 200, 255, 0.35);
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  transition:
+    transform 0.3s ease-out,
+    opacity 0.3s ease-out;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+  user-select: none;
+}
+
+.audio-catcher-bubble--popping {
+  transform: translate3d(var(--bubble-x, 0), var(--bubble-y, 0), 0) translateX(-50%) scale(1.65) !important;
+  opacity: 0 !important;
+}
+
+.audio-catcher-bubble:active:not(.audio-catcher-bubble--popping) {
+  transform: translate3d(var(--bubble-x, 0), var(--bubble-y, 0), 0) translateX(-50%) scale(0.95);
+}
+
+/* 游戏 / 任务全屏容器 */
+.game-container {
+  position: relative;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* AR / 相机沉浸式全屏层 */
+.ar-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+  background: #000;
+}
+
+/* AR 取景框 / 视频预览层 — 禁止长按存图、文本选择 */
+.ar-viewfinder {
+  position: relative;
+  overflow: hidden;
+}
+
+/* 嵌入式小游戏根节点（非全屏 game-container） */
+.interactive-area {
+  position: relative;
+}
+
+/* 千灯结缘 — 匹配连线（CSS 动画，避免 SVG 动效库兼容问题） */
+@keyframes lantern-link-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes lantern-link-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.lantern-link-line {
+  fill: none;
+  stroke: #ffd700;
+  stroke-width: 4px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 1;
+}
+
+.lantern-link-line--show {
+  animation: lantern-link-in 0.2s ease-out both;
+}
+
+.lantern-link-line--fade {
+  animation: lantern-link-out 0.14s ease-in both;
+}
+
+/* 取景 / AR 左上角安全返回 */
+.camera-back-btn {
+  position: absolute;
+  top: max(env(safe-area-inset-top, 0px), 20px);
+  left: 20px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 14px 8px 10px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  background: rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: rgba(255, 255, 255, 0.96);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.45);
+}
+
+.camera-back-btn__icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* 全局居中弹窗遮罩 — Portal 到 body，脱离文档流 */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  transform: none;
+}
+
+.modal-overlay__panel {
+  flex-shrink: 0;
+  max-height: calc(100dvh - max(16px, env(safe-area-inset-top)) - max(16px, env(safe-area-inset-bottom)));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: manipulation;
+}
+
+html.modal-scroll-lock,
+body.modal-scroll-lock {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  touch-action: none !important;
+}
+
+body.modal-scroll-lock {
+  position: fixed;
+  width: 100%;
+  height: 100dvh;
+}
+
+body.modal-scroll-lock #root {
+  overflow: hidden !important;
+}
+
+/* 罗盘页内层滚动容器 — 弹窗打开时禁止穿透滑动 */
+.scroll-root-lock {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  touch-action: none !important;
+}
+
+/* 主线任务舞台 — 防止游戏卸载后高度塌陷导致滚动条跳顶 */
+.quest-stage-shell {
+  min-height: min(72dvh, 640px);
+}
+
+.quest-stage-body {
+  min-height: min(68dvh, 600px);
+}
+
+/* 剧情任务流宿主 — 保持可滚动区域最小高度 */
+.quest-flow-host {
+  min-height: 0;
+}
+
+/* 调试 FPS — 固定吸附屏幕左上角，不受 relative 容器影响 */
+.fps-counter {
+  position: fixed;
+  top: env(safe-area-inset-top, 10px);
+  left: 10px;
+  z-index: 99999;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: #00ff00;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* 底部交互栏 — 全面屏安全区 */
+.game-action-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+  z-index: 20;
+}
+
+@layer utilities {
+  .text-glow {
+    text-shadow: 0 0 16px rgba(45, 212, 168, 0.45);
+  }
+
+  .text-glow-gold {
+    text-shadow: 0 0 14px rgba(245, 224, 106, 0.4);
+  }
+
+  .border-glow {
+    border-color: rgba(45, 212, 168, 0.35);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.12);
+  }
+
+  .bg-mythic {
+    background: linear-gradient(160deg, #071218 0%, #0f2430 45%, #0c4a6e 100%);
+  }
+
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.task-map .leaflet-container {
+  background: #071218;
+  font-family: var(--font-sans);
+}
+
+.task-map .leaflet-popup-content-wrapper {
+  background: #0f2430;
+  color: #e8f4f8;
+  border: 1px solid rgba(45, 212, 168, 0.25);
+  border-radius: 10px;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.12);
+}
+
+.task-map .leaflet-popup-tip {
+  background: #0f2430;
+}
+
+.task-map .leaflet-popup-close-button {
+  color: #94b8c8;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.7;
+  }
+}
+
+@keyframes border-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@layer components {
+  .mobile-shell {
+    @apply relative flex h-full w-full flex-col overflow-hidden text-mist;
+    background: #040d12;
+  }
+
+  .mobile-shell-immersive {
+    background: radial-gradient(
+      ellipse at 50% 0%,
+      rgba(14, 116, 144, 0.35) 0%,
+      #040d12 65%
+    );
+  }
+
+  .mythic-panel {
+    @apply rounded-2xl border border-jade/20 bg-void-800/55 backdrop-blur-xl;
+    box-shadow:
+      inset 0 1px 0 rgba(45, 212, 168, 0.1),
+      0 8px 32px rgba(0, 0, 0, 0.35);
+  }
+
+  .mythic-panel-glow {
+    box-shadow:
+      inset 0 1px 0 rgba(56, 189, 248, 0.12),
+      0 0 24px rgba(45, 212, 168, 0.1),
+      0 8px 32px rgba(0, 0, 0, 0.35);
+  }
+
+  .panel-corner {
+    @apply pointer-events-none absolute h-4 w-4;
+    border-color: rgba(45, 212, 168, 0.4);
+  }
+
+  .panel-corner-tl {
+    @apply left-2 top-2 border-l-2 border-t-2;
+  }
+
+  .panel-corner-tr {
+    @apply right-2 top-2 border-r-2 border-t-2;
+  }
+
+  .panel-corner-bl {
+    @apply bottom-2 left-2 border-b-2 border-l-2;
+  }
+
+  .panel-corner-br {
+    @apply bottom-2 right-2 border-b-2 border-r-2;
+  }
+
+  .glass-panel {
+    @apply rounded-2xl border border-sky/15 bg-void-800/55 backdrop-blur-xl;
+    box-shadow:
+      inset 0 1px 0 rgba(56, 189, 248, 0.08),
+      0 8px 32px rgba(0, 0, 0, 0.35);
+  }
+
+  .input-mythic {
+    @apply w-full rounded-xl border border-jade/25 bg-void-900/70 px-4 py-3.5
+           text-base text-mist outline-none transition-all duration-300
+           placeholder:text-mist-faint/60 focus:border-sky/50;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.25);
+  }
+
+  .input-mythic:focus {
+    box-shadow:
+      inset 0 2px 8px rgba(0, 0, 0, 0.25),
+      0 0 16px rgba(56, 189, 248, 0.15);
+  }
+
+  .input-mythic-center {
+    @apply w-full rounded-xl border border-jade/25 bg-void-900/70 px-4 py-3.5
+           text-center text-lg tracking-[0.25em] text-mist outline-none
+           transition-all duration-300 placeholder:text-mist-faint/60
+           focus:border-sky/50;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.25);
+  }
+
+  .btn-primary {
+    @apply relative overflow-hidden rounded-xl px-8 py-3.5 text-base font-medium
+           tracking-widest text-void-950 transition-all duration-300
+           active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40;
+    border: 1px solid rgba(245, 224, 106, 0.45);
+    background: linear-gradient(
+      135deg,
+      #059669 0%,
+      #2dd4a8 40%,
+      #0ea5e9 100%
+    );
+    background-size: 200% 200%;
+    box-shadow:
+      0 0 20px rgba(45, 212, 168, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  .btn-primary:not(:disabled):hover {
+    animation: border-flow 3s linear infinite;
+  }
+
+  .btn-primary::before {
+    content: '';
+    @apply absolute inset-0 -translate-x-full animate-shimmer;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.15) 50%,
+      transparent 100%
+    );
+  }
+
+  .btn-secondary {
+    @apply rounded-xl border border-sky/20 bg-void-800/60 px-6 py-3
+           text-sm tracking-wider text-mist-muted backdrop-blur-sm
+           transition-all active:scale-[0.97] active:border-jade/35
+           active:text-mist;
+  }
+
+  .divider-glow {
+    @apply h-px w-full;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(45, 212, 168, 0.4) 25%,
+      rgba(245, 224, 106, 0.7) 50%,
+      rgba(56, 189, 248, 0.4) 75%,
+      transparent 100%
+    );
+  }
+
+  .brand-title {
+    @apply font-display;
+    text-shadow: 0 0 14px rgba(245, 224, 106, 0.4);
+    background: linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #5eecc4 35%,
+      #fde68a 70%,
+      #e8c547 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .step-dot {
+    @apply h-1.5 flex-1 rounded-full bg-void-600/80 transition-all duration-500;
+  }
+
+  .step-dot-active {
+    @apply bg-gradient-to-r from-jade-muted to-sky;
+    box-shadow: 0 0 8px rgba(45, 212, 168, 0.45);
+  }
+
+  .label-mythic {
+    @apply mb-2 block text-xs tracking-[0.2em] text-jade-bright;
+  }
+
+  /* ─── ImageGen 主视觉场景层 ─── */
+  .landing-shell,
+  .register-shell {
+    isolation: isolate;
+    background: #020a0f;
+  }
+
+  .scene-art {
+    @apply pointer-events-none absolute inset-0;
+    background-image: url('/assets/generated/wanfenglin-spirit-hero-v2.jpg');
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+
+  .scene-art-landing {
+    background-position: center center;
+    filter: saturate(1.08) contrast(1.03);
+  }
+
+  .scene-art-register {
+    background-position: center 44%;
+    filter: saturate(0.92) contrast(1.08);
+    opacity: 0.48;
+    transform: scale(1.03);
+  }
+
+  .scene-vignette {
+    @apply pointer-events-none absolute inset-0;
+    background:
+      linear-gradient(180deg, rgba(2, 10, 15, 0.34) 0%, rgba(2, 10, 15, 0.04) 36%, rgba(2, 10, 15, 0.28) 56%, rgba(2, 10, 15, 0.94) 100%),
+      radial-gradient(circle at 50% 28%, transparent 0%, rgba(2, 10, 15, 0.16) 58%, rgba(2, 10, 15, 0.62) 100%);
+  }
+
+  .scene-vignette-register {
+    background:
+      linear-gradient(180deg, rgba(2, 10, 15, 0.66) 0%, rgba(2, 10, 15, 0.78) 42%, rgba(2, 10, 15, 0.96) 100%),
+      radial-gradient(circle at 50% 18%, rgba(45, 212, 168, 0.12), transparent 46%);
+  }
+
+  .landing-kicker,
+  .landing-location-pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-medium tracking-[0.16em] backdrop-blur-md;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .landing-kicker {
+    border-color: rgba(94, 236, 196, 0.28);
+    background: rgba(4, 20, 25, 0.46);
+    color: rgba(178, 255, 230, 0.88);
+  }
+
+  .landing-location-pill {
+    border-color: rgba(253, 230, 138, 0.24);
+    background: rgba(24, 20, 8, 0.34);
+    color: rgba(253, 230, 138, 0.84);
+    letter-spacing: 0.08em;
+  }
+
+  .landing-brand-mark::before {
+    content: '';
+    position: absolute;
+    inset: -34px;
+    z-index: -1;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(45, 212, 168, 0.22), transparent 66%);
+    filter: blur(10px);
+  }
+
+  .landing-feature-chip {
+    @apply flex min-h-12 flex-col items-center justify-center rounded-xl border px-2 py-2 text-center backdrop-blur-xl;
+    border-color: rgba(94, 236, 196, 0.18);
+    background: linear-gradient(180deg, rgba(7, 28, 35, 0.68), rgba(3, 17, 23, 0.82));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 8px 24px rgba(0, 0, 0, 0.16);
+  }
+
+  .landing-feature-chip > span {
+    @apply text-[11px] font-medium tracking-wider text-mist;
+  }
+
+  .landing-feature-chip > small {
+    @apply mt-0.5 text-[9px] tracking-wider text-mist-muted;
+  }
+
+  .landing-primary-cta {
+    min-height: 54px;
+    border-color: rgba(253, 230, 138, 0.66);
+    background: linear-gradient(112deg, #10b981 0%, #38d9b1 52%, #38bdf8 100%);
+    box-shadow:
+      0 14px 36px rgba(16, 185, 129, 0.28),
+      0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+      0 1px 0 rgba(255, 255, 255, 0.28) inset;
+  }
+
+  .landing-activation-card {
+    border-color: rgba(94, 236, 196, 0.2);
+    background: linear-gradient(135deg, rgba(7, 28, 35, 0.82), rgba(4, 17, 23, 0.9));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 12px 30px rgba(0, 0, 0, 0.24);
+  }
+
+  .page-header-surface {
+    background: linear-gradient(180deg, rgba(2, 10, 15, 0.78), rgba(2, 10, 15, 0.18));
+    backdrop-filter: blur(12px);
+  }
+
+  .register-progress {
+    @apply grid grid-cols-3 gap-1 rounded-2xl border p-1.5 backdrop-blur-xl;
+    border-color: rgba(94, 236, 196, 0.15);
+    background: rgba(3, 17, 23, 0.72);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .register-progress-item {
+    @apply flex min-w-0 items-center justify-center gap-1.5 rounded-xl px-1.5 py-2 text-mist-faint transition-all duration-500;
+  }
+
+  .register-progress-item-active {
+    color: var(--color-mist);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(56, 189, 248, 0.12));
+    box-shadow: inset 0 0 0 1px rgba(94, 236, 196, 0.13);
+  }
+
+  .register-progress-index {
+    @apply flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px] font-semibold;
+    border-color: rgba(90, 122, 138, 0.42);
+    background: rgba(4, 13, 18, 0.7);
+  }
+
+  .register-progress-item-active .register-progress-index {
+    border-color: rgba(94, 236, 196, 0.55);
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--color-jade-bright);
+    box-shadow: 0 0 12px rgba(45, 212, 168, 0.2);
+  }
+
+  .register-progress-label {
+    @apply truncate text-[10px] tracking-wide;
+  }
+
+  .register-panel {
+    border-color: rgba(94, 236, 196, 0.24);
+    background: linear-gradient(145deg, rgba(7, 30, 38, 0.88), rgba(3, 17, 23, 0.94));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.07),
+      0 18px 45px rgba(0, 0, 0, 0.34),
+      0 0 30px rgba(45, 212, 168, 0.06);
+  }
+
+  .register-action-bar {
+    border-top: 1px solid rgba(94, 236, 196, 0.12);
+    background: linear-gradient(180deg, rgba(2, 10, 15, 0.22), rgba(2, 10, 15, 0.96) 28%);
+    backdrop-filter: blur(18px);
+  }
+
+  .register-next-button {
+    min-height: 54px;
+  }
+
+  @media (max-height: 760px) {
+    .landing-brand-mark {
+      margin-top: 0.75rem;
+      transform: scale(0.84);
+    }
+
+    .landing-feature-chip {
+      min-height: 42px;
+      padding-block: 0.375rem;
+    }
+  }
+
+  /* 视差剪影滑块 — iOS Safari 统一样式 */
+  .range-mythic {
+    @apply h-8 w-full cursor-pointer appearance-none bg-transparent;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .range-mythic:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+
+  .range-mythic::-webkit-slider-runnable-track {
+    @apply h-2 rounded-full;
+    background: linear-gradient(
+      90deg,
+      rgba(15, 36, 48, 0.9) 0%,
+      rgba(45, 212, 168, 0.35) 50%,
+      rgba(15, 36, 48, 0.9) 100%
+    );
+    border: 1px solid rgba(45, 212, 168, 0.2);
+  }
+
+  .range-mythic::-webkit-slider-thumb {
+    @apply appearance-none;
+    width: 22px;
+    height: 22px;
+    margin-top: -6px;
+    border-radius: 9999px;
+    border: 2px solid rgba(253, 230, 138, 0.7);
+    background: linear-gradient(135deg, #2dd4a8 0%, #0ea5e9 100%);
+    box-shadow:
+      0 0 10px rgba(45, 212, 168, 0.45),
+      0 2px 6px rgba(0, 0, 0, 0.35);
+  }
+
+  .range-mythic::-moz-range-track {
+    @apply h-2 rounded-full;
+    background: linear-gradient(
+      90deg,
+      rgba(15, 36, 48, 0.9) 0%,
+      rgba(45, 212, 168, 0.35) 50%,
+      rgba(15, 36, 48, 0.9) 100%
+    );
+    border: 1px solid rgba(45, 212, 168, 0.2);
+  }
+
+  .range-mythic::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 9999px;
+    border: 2px solid rgba(253, 230, 138, 0.7);
+    background: linear-gradient(135deg, #2dd4a8 0%, #0ea5e9 100%);
+    box-shadow:
+      0 0 10px rgba(45, 212, 168, 0.45),
+      0 2px 6px rgba(0, 0, 0, 0.35);
+  }
+
+  /* 地质纪年时间滑块 — 仪器面板风格 */
+  .range-geologic {
+    @apply h-9 w-full cursor-pointer appearance-none bg-transparent;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .range-geologic:disabled {
+    @apply cursor-not-allowed opacity-45;
+  }
+
+  .range-geologic::-webkit-slider-runnable-track {
+    @apply h-2.5 rounded-full;
+    background: linear-gradient(
+      90deg,
+      rgba(28, 58, 74, 0.95) 0%,
+      rgba(232, 197, 71, 0.28) 45%,
+      rgba(14, 165, 233, 0.22) 55%,
+      rgba(28, 58, 74, 0.95) 100%
+    );
+    border: 1px solid rgba(232, 197, 71, 0.22);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35);
+  }
+
+  .range-geologic::-webkit-slider-thumb {
+    @apply appearance-none;
+    width: 24px;
+    height: 24px;
+    margin-top: -7px;
+    border-radius: 4px;
+    border: 2px solid rgba(253, 230, 138, 0.75);
+    background: linear-gradient(145deg, #3d2e14 0%, #8b6914 40%, #e8c547 100%);
+    box-shadow:
+      0 0 12px rgba(232, 197, 71, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25),
+      0 2px 8px rgba(0, 0, 0, 0.4);
+    transform: rotate(45deg);
+  }
+
+  .range-geologic::-moz-range-track {
+    @apply h-2.5 rounded-full;
+    background: linear-gradient(
+      90deg,
+      rgba(28, 58, 74, 0.95) 0%,
+      rgba(232, 197, 71, 0.28) 45%,
+      rgba(14, 165, 233, 0.22) 55%,
+      rgba(28, 58, 74, 0.95) 100%
+    );
+    border: 1px solid rgba(232, 197, 71, 0.22);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35);
+  }
+
+  .range-geologic::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 2px solid rgba(253, 230, 138, 0.75);
+    background: linear-gradient(145deg, #3d2e14 0%, #8b6914 40%, #e8c547 100%);
+    box-shadow:
+      0 0 12px rgba(232, 197, 71, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25),
+      0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* ─── RiverRunGame · 无缝水面滚动（transform 合成层，减轻安卓 repaint） ─── */
+.river-run-track {
+  contain: layout paint;
+  background-color: #0c4a6e;
+  transform: translateZ(0);
+}
+
+.river-water-scroll {
+  background-color: #0c4a6e;
+  background-image: url('/assets/river/water-bg.png');
+  background-size: 100% var(--river-tile-h, 320px);
+  background-repeat: repeat-y;
+  background-position: center 0;
+  backface-visibility: hidden;
+  pointer-events: none;
+}
+
+@keyframes river-splash-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scaleX(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scaleX(1.12);
+  }
+}
+
+/* 四航道分区 */
+.river-lanes-layer {
+  pointer-events: none;
+}
+
+.river-lane-strip {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(14, 116, 144, 0.05) 0%,
+    rgba(14, 116, 144, 0.09) 50%,
+    rgba(8, 47, 73, 0.06) 100%
+  );
+}
+
+.river-lane-strip--alt {
+  background: linear-gradient(
+    180deg,
+    rgba(56, 189, 248, 0.03) 0%,
+    rgba(56, 189, 248, 0.07) 50%,
+    rgba(12, 74, 110, 0.05) 100%
+  );
+}
+
+.river-run-paddle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 12;
+  border-radius: 10px;
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  background: linear-gradient(180deg, #f0c878 0%, #d89448 38%, #a86a32 100%);
+  box-shadow:
+    0 0 18px rgba(56, 189, 248, 0.35),
+    inset 0 2px 4px rgba(255, 240, 210, 0.45),
+    inset 0 -3px 6px rgba(60, 30, 10, 0.35);
+  border: 1.5px solid rgba(255, 230, 180, 0.55);
+  pointer-events: none;
+}
+
+.river-run-paddle::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -14px;
+  width: 6px;
+  height: 52px;
+  transform: translateX(-50%);
+  border-radius: 3px;
+  background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 100%);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.35);
+}
+
+.river-run-paddle::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  width: 52px;
+  height: 14px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(125, 211, 252, 0.55) 0%, transparent 72%);
+  animation: river-splash-pulse 0.55s ease-in-out infinite;
+  filter: blur(1px);
+}
+
+.river-run-paddle--invuln {
+  animation: river-paddle-blink 0.22s ease-in-out infinite;
+}
+
+@keyframes river-paddle-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.42;
+  }
+}
+
+@keyframes river-ripple-ring {
+  0% {
+    transform: translateX(-50%) scale(0.55);
+    opacity: 0.75;
+  }
+  100% {
+    transform: translateX(-50%) scale(1.35);
+    opacity: 0;
+  }
+}
+
+@keyframes river-droplet-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 14px rgba(56, 189, 248, 0.55),
+      0 0 28px rgba(125, 211, 252, 0.25);
+  }
+  50% {
+    box-shadow:
+      0 0 22px rgba(125, 211, 252, 0.85),
+      0 0 40px rgba(56, 189, 248, 0.45);
+  }
+}
+
+@keyframes river-float-up {
+  0% {
+    opacity: 1;
+    transform: translate3d(var(--river-float-x, 0), var(--river-float-y, 0), 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--river-float-x, 0), calc(var(--river-float-y, 0) - 42px), 0)
+      scale(1.15);
+  }
+}
+
+/* 实体精灵层 */
+.river-entity {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 8;
+  pointer-events: none;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+.river-sprite--img {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.35));
+}
+
+.river-sprite--img::before,
+.river-sprite--img::after {
+  content: none !important;
+  display: none !important;
+}
+
+.river-sprite--img.river-sprite-droplet {
+  filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.55));
+}
+
+.river-run-paddle--img {
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  filter: none;
+}
+
+.river-run-paddle--img::before,
+.river-run-paddle--img::after {
+  display: none !important;
+}
+
+.river-sprite-log {
+  /* background-image: url('/assets/river-log.png'); */
+  border-radius: 999px;
+  background-image:
+    linear-gradient(90deg, #3d2817 0%, #6b4423 18%, #8b5a2b 42%, #5c3d1e 68%, #3d2817 100%),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 6px,
+      rgba(0, 0, 0, 0.12) 6px,
+      rgba(0, 0, 0, 0.12) 8px
+    );
+  box-shadow:
+    inset 0 2px 4px rgba(255, 220, 160, 0.2),
+    0 4px 10px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(90, 55, 30, 0.65);
+}
+
+.river-sprite-log::after {
+  content: '🪵';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  opacity: 0.55;
+  filter: grayscale(0.2);
+}
+
+.river-sprite-reef {
+  /* background-image: url('/assets/river-reef.png'); */
+  border-radius: 42% 58% 48% 52% / 38% 42% 58% 62%;
+  background-image: linear-gradient(145deg, #5a6370 0%, #3d4650 38%, #2a3138 72%, #1e2429 100%);
+  box-shadow:
+    inset -3px -4px 8px rgba(0, 0, 0, 0.45),
+    inset 2px 2px 6px rgba(160, 175, 190, 0.15),
+    0 5px 12px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(100, 116, 128, 0.45);
+}
+
+.river-sprite-reef::after {
+  content: '🪨';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  opacity: 0.5;
+}
+
+.river-sprite-droplet {
+  /* background-image: url('/assets/river-droplet.png'); */
+  border-radius: 50% 50% 50% 5% / 50% 50% 50% 5%;
+  transform: rotate(45deg);
+  background: linear-gradient(135deg, #e0f2fe 0%, #38bdf8 45%, #0284c7 100%);
+  animation: river-droplet-glow 1.2s ease-in-out infinite;
+}
+
+.river-sprite-droplet::before {
+  content: '💧';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  transform: rotate(-45deg);
+  opacity: 0.85;
+}
+
+.river-run-paddle .river-paddle-ripple {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 56px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  border-radius: 50%;
+  animation: river-ripple-ring 1.1s ease-out infinite;
+  pointer-events: none;
+}
+
+.river-run-paddle .river-paddle-ripple--delay {
+  animation-delay: 0.55s;
+}
+
+.river-float-score {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 14;
+  font-size: 14px;
+  font-weight: 700;
+  color: #7dd3fc;
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+  pointer-events: none;
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  animation: river-float-up 0.85s ease-out forwards;
+}
+
+.river-ctrl-btn {
+  flex: 1;
+  max-width: 148px;
+  border-radius: 14px;
+  border: 1px solid rgba(125, 211, 252, 0.28);
+  background: rgba(15, 36, 48, 0.72);
+  color: rgba(232, 244, 248, 0.92);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 14px 10px;
+  backdrop-filter: blur(6px);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s ease, background 0.1s ease, border-color 0.1s ease;
+  user-select: none;
+}
+
+.river-ctrl-btn:active,
+.river-ctrl-btn--pressed {
+  transform: scale(0.94);
+  background: rgba(56, 189, 248, 0.22);
+  border-color: rgba(125, 211, 252, 0.55);
+}
+
+/* 触控设备：关闭高开销滤镜/动画，稳定安卓帧率 */
+@media (hover: none) and (pointer: coarse) {
+  .river-sprite--img {
+    filter: none;
+  }
+
+  .river-sprite--img.river-sprite-droplet {
+    filter: none;
+  }
+
+  .river-sprite-droplet {
+    animation: none;
+  }
+
+  .river-run-paddle .river-paddle-ripple {
+    display: none;
+  }
+
+  .river-ctrl-btn {
+    backdrop-filter: none;
+  }
+}
+
+/* ─── CompassAnomaly · 罗盘异动找茬 ─── */
+.compass-anomaly-scene {
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+}
+
+.compass-anomaly {
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+.compass-anomaly-scene .compass-anomaly-image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+  touch-action: none;
+}
+
+.compass-anomaly-scene .compass-anomaly-image-frame {
+  position: relative;
+  display: block;
+  line-height: 0;
+  flex-shrink: 0;
+}
+
+.compass-anomaly-scene .compass-anomaly-image-frame img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  object-position: center center;
+}
+
+.compass-anomaly-image-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.compass-anomaly-loupe {
+  position: fixed;
+  z-index: 100000;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 245, 255, 0.9);
+  box-shadow:
+    0 0 10px #00f5ff,
+    0 0 22px rgba(0, 245, 255, 0.45),
+    inset 0 0 16px rgba(0, 245, 255, 0.12);
+  background-repeat: no-repeat;
+  background-color: rgba(2, 12, 20, 0.55);
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+}
+
+.compass-anomaly-loupe-label {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: rgba(0, 20, 28, 0.72);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: rgba(0, 245, 255, 0.95);
+  line-height: 1.3;
+  pointer-events: none;
+}
+
+@keyframes compass-glitch-shift {
+  0% { transform: translate(0); filter: hue-rotate(0deg); }
+  12% { transform: translate(-3px, 2px); filter: hue-rotate(90deg) saturate(2.5); }
+  24% { transform: translate(3px, -1px); filter: hue-rotate(-40deg) contrast(1.4); }
+  36% { transform: translate(-2px, -2px); filter: saturate(3) brightness(1.2); }
+  48% { transform: translate(2px, 1px); filter: hue-rotate(180deg); }
+  60% { transform: translate(0, 3px); filter: contrast(1.6); }
+  72% { transform: translate(-1px, 0); filter: hue-rotate(45deg); }
+  84% { transform: translate(1px, -2px); filter: saturate(2); }
+  100% { transform: translate(0); filter: none; }
+}
+
+@keyframes compass-snow {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(0, 120px, 0); }
+}
+
+@keyframes compass-error-edge {
+  0%, 100% { box-shadow: inset 0 0 0 0 transparent; }
+  35% { box-shadow: inset 0 0 0 4px rgba(248, 113, 113, 0.85); }
+  70% { box-shadow: inset 0 0 0 2px rgba(248, 113, 113, 0.35); }
+}
+
+@keyframes compass-purify-ring {
+  0% { transform: translate(-50%, -50%) scale(0.4); opacity: 0.95; }
+  70% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.75; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+.compass-anomaly--glitch {
+  animation: compass-glitch-shift 0.18s steps(2) infinite;
+}
+
+.compass-anomaly--error {
+  animation: compass-error-edge 0.42s ease-out;
+}
+
+.compass-anomaly-glitch-overlay {
+  animation: compass-glitch-shift 0.12s steps(3) infinite;
+}
+
+.compass-anomaly-snow {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.04) 2px,
+    rgba(255, 255, 255, 0.04) 4px
+  );
+  background-size: 100% 120px;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  animation: compass-snow 0.35s linear infinite;
+}
+
+.compass-anomaly-img-noise {
+  filter: saturate(1.35) contrast(1.12) hue-rotate(-8deg);
+}
+
+.compass-anomaly-img-clear {
+  filter: saturate(1) contrast(1) hue-rotate(0deg) brightness(1.05);
+}
+
+.compass-anomaly-noise-scanlines {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 1px,
+    rgba(0, 0, 0, 0.12) 1px,
+    rgba(0, 0, 0, 0.12) 2px
+  );
+  mix-blend-mode: overlay;
+}
+
+.compass-purify-ring {
+  border: 2px solid rgba(45, 212, 168, 0.95);
+  box-shadow:
+    0 0 16px rgba(45, 212, 168, 0.75),
+    0 0 32px rgba(34, 211, 238, 0.35),
+    inset 0 0 12px rgba(167, 243, 208, 0.4);
+  animation: compass-purify-ring 0.55s ease-out forwards;
+}
+
+.compass-spot-found-ring {
+  border: 2px solid rgba(251, 191, 36, 0.95);
+  box-shadow:
+    0 0 18px rgba(251, 191, 36, 0.85),
+    0 0 36px rgba(245, 158, 11, 0.55),
+    inset 0 0 14px rgba(254, 243, 199, 0.45);
+  animation: compass-purify-ring 0.55s ease-out forwards, compass-spot-gold-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes compass-spot-gold-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 18px rgba(251, 191, 36, 0.85),
+      0 0 36px rgba(245, 158, 11, 0.55),
+      inset 0 0 14px rgba(254, 243, 199, 0.45);
+  }
+  50% {
+    box-shadow:
+      0 0 28px rgba(252, 211, 77, 1),
+      0 0 52px rgba(245, 158, 11, 0.75),
+      inset 0 0 18px rgba(255, 251, 235, 0.65);
+  }
+}
+
+/* ─── WindRiding · 追风骑行 ─── */
+@keyframes wind-streak-rise {
+  0% {
+    transform: translateY(110%) scaleY(0.6);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-130%) scaleY(1.1);
+    opacity: 0;
+  }
+}
+
+@keyframes wind-bg-drift {
+  0% {
+    transform: scale(1.08) translateY(0);
+    filter: blur(6px) brightness(0.92);
+  }
+  50% {
+    transform: scale(1.12) translateY(-2%);
+    filter: blur(8px) brightness(1);
+  }
+  100% {
+    transform: scale(1.08) translateY(0);
+    filter: blur(6px) brightness(0.92);
+  }
+}
+
+@keyframes wind-breathe {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@keyframes wind-status-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 18px rgba(56, 189, 248, 0.12),
+      inset 0 0 12px rgba(34, 211, 238, 0.06);
+  }
+  50% {
+    box-shadow:
+      0 0 36px rgba(56, 189, 248, 0.32),
+      inset 0 0 20px rgba(34, 211, 238, 0.14);
+  }
+}
+
+@keyframes wind-icon-sway {
+  0%, 100% { transform: rotate(-10deg) scale(1); }
+  50% { transform: rotate(10deg) scale(1.06); }
+}
+
+@keyframes wind-icon-ring {
+  0%, 100% { transform: scale(1); opacity: 0.55; }
+  50% { transform: scale(1.12); opacity: 1; }
+}
+
+@keyframes wind-sweep {
+  0% { transform: translateX(-140%) skewX(-14deg); opacity: 0; }
+  25% { opacity: 0.7; }
+  100% { transform: translateX(320%) skewX(-14deg); opacity: 0; }
+}
+
+@keyframes wind-dot-pulse {
+  0%, 20% { opacity: 0.15; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-2px); }
+  100% { opacity: 0.15; transform: translateY(0); }
+}
+
+@keyframes wind-text-shimmer {
+  0%, 100% { text-shadow: 0 0 10px rgba(186, 230, 253, 0.35); }
+  50% { text-shadow: 0 0 18px rgba(186, 230, 253, 0.75), 0 0 28px rgba(34, 211, 238, 0.35); }
+}
+
+@keyframes wind-storm-gather {
+  0% {
+    opacity: 0;
+    background: radial-gradient(circle at 50% 80%, transparent 0%, transparent 70%);
+  }
+  40% {
+    opacity: 1;
+    background: radial-gradient(
+      circle at 50% 50%,
+      rgba(45, 212, 168, 0.45) 0%,
+      rgba(34, 211, 238, 0.2) 35%,
+      transparent 68%
+    );
+  }
+  100% {
+    opacity: 0.85;
+    background: radial-gradient(
+      circle at 50% 45%,
+      rgba(167, 243, 208, 0.55) 0%,
+      rgba(34, 211, 238, 0.15) 42%,
+      transparent 72%
+    );
+  }
+}
+
+.wind-riding-bg {
+  filter: blur(5px) brightness(0.9);
+  transform: scale(1.06);
+}
+
+.wind-riding-bg--motion {
+  animation: wind-bg-drift 4s ease-in-out infinite;
+}
+
+.wind-riding-streak {
+  animation: wind-streak-rise linear infinite;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.35);
+}
+
+.wind-riding-breathe {
+  animation: wind-breathe 2.4s ease-in-out infinite;
+}
+
+.wind-riding-status {
+  animation: wind-status-glow 2.8s ease-in-out infinite;
+}
+
+.wind-riding-icon-wrap {
+  animation: wind-icon-ring 2.4s ease-in-out infinite;
+}
+
+.wind-riding-icon {
+  animation: wind-icon-sway 2.2s ease-in-out infinite;
+}
+
+.wind-riding-sweep {
+  animation: wind-sweep 3.2s ease-in-out infinite;
+}
+
+.wind-riding-sweep--delay {
+  animation-delay: 1.6s;
+}
+
+.wind-riding-status-text {
+  animation: wind-text-shimmer 2.6s ease-in-out infinite;
+}
+
+.wind-riding-dots span {
+  animation: wind-dot-pulse 1.4s ease-in-out infinite;
+}
+
+.wind-riding-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.wind-riding-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.wind-riding-storm {
+  animation: wind-storm-gather 1.1s ease-out forwards;
+}
+
+/* ─── LeylineMatch3 · 地脉消消乐 ─── */
+@keyframes leyline-bg-pulse {
+  0%, 100% { filter: brightness(0.82) saturate(1.1); }
+  50% { filter: brightness(1) saturate(1.25); }
+}
+
+@keyframes leyline-cell-clear {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+
+@keyframes leyline-grid-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+
+@keyframes leyline-victory-gather {
+  0% {
+    opacity: 0;
+    background: radial-gradient(circle at 50% 60%, transparent 0%, transparent 70%);
+  }
+  45% {
+    opacity: 1;
+    background: radial-gradient(
+      circle at 50% 50%,
+      rgba(52, 211, 153, 0.55) 0%,
+      rgba(16, 185, 129, 0.25) 38%,
+      transparent 70%
+    );
+  }
+  100% {
+    opacity: 0.9;
+    background: radial-gradient(
+      circle at 50% 45%,
+      rgba(167, 243, 208, 0.65) 0%,
+      rgba(52, 211, 153, 0.2) 45%,
+      transparent 75%
+    );
+  }
+}
+
+.leyline-match3-bg {
+  animation: leyline-bg-pulse 5s ease-in-out infinite;
+}
+
+.leyline-bar-track {
+  background: rgba(15, 23, 42, 0.75);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.45);
+}
+
+.leyline-bar-moves {
+  background: linear-gradient(90deg, #b45309, #fbbf24, #fde68a);
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.45);
+}
+
+.leyline-bar-wood {
+  background: linear-gradient(90deg, #065f46, #34d399, #a7f3d0);
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.45);
+}
+
+.leyline-cell--wood {
+  background: linear-gradient(145deg, rgba(6, 78, 59, 0.85), rgba(16, 185, 129, 0.35));
+  box-shadow: inset 0 0 8px rgba(52, 211, 153, 0.25);
+}
+
+.leyline-cell--stone {
+  background: linear-gradient(145deg, rgba(68, 64, 60, 0.9), rgba(120, 113, 108, 0.4));
+}
+
+.leyline-cell--deadwood {
+  background: linear-gradient(145deg, rgba(69, 26, 3, 0.88), rgba(180, 83, 9, 0.35));
+}
+
+.leyline-cell--muddy {
+  background: linear-gradient(145deg, rgba(12, 74, 110, 0.88), rgba(14, 165, 233, 0.3));
+}
+
+.leyline-cell--fire {
+  background: linear-gradient(145deg, rgba(127, 29, 29, 0.9), rgba(249, 115, 22, 0.4));
+  box-shadow: inset 0 0 8px rgba(251, 146, 60, 0.35);
+}
+
+.leyline-bar-stone {
+  background: linear-gradient(90deg, #44403c, #a8a29e, #e7e5e4);
+  box-shadow: 0 0 10px rgba(168, 162, 158, 0.4);
+}
+
+.leyline-cell--locked {
+  cursor: not-allowed;
+}
+
+.leyline-vine-overlay {
+  border: 2px dashed rgba(74, 222, 128, 0.75);
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(22, 101, 52, 0.35) 0px,
+      rgba(22, 101, 52, 0.35) 3px,
+      rgba(34, 197, 94, 0.15) 3px,
+      rgba(34, 197, 94, 0.15) 6px
+    );
+  box-shadow: inset 0 0 10px rgba(34, 197, 94, 0.25);
+}
+
+.leyline-cell--unlocking {
+  animation: leyline-vine-break 0.35s ease-out forwards;
+}
+
+@keyframes leyline-vine-break {
+  0% {
+    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.8);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 14px 4px rgba(74, 222, 128, 0.55);
+    transform: scale(1.08);
+  }
+  100% {
+    box-shadow: none;
+    transform: scale(1);
+  }
+}
+
+@keyframes leyline-grid-locked-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-2px) rotate(-0.3deg); }
+  40% { transform: translateX(2px) rotate(0.3deg); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+
+.leyline-grid--locked {
+  animation: leyline-grid-locked-shake 0.22s ease-in-out;
+}
+
+.leyline-cell--selected {
+  box-shadow:
+    0 0 0 2px rgba(167, 243, 208, 0.85),
+    0 0 16px rgba(52, 211, 153, 0.55);
+}
+
+.leyline-cell--clearing {
+  animation: leyline-cell-clear 0.18s ease-out forwards;
+}
+
+.leyline-grid--invalid {
+  animation: leyline-grid-shake 0.28s ease-in-out;
+}
+
+.leyline-grid--frozen {
+  pointer-events: none;
+  filter: saturate(1.2) brightness(1.05);
+}
+
+.leyline-victory-burst {
+  animation: leyline-victory-gather 0.9s ease-out forwards;
+}
+
+/* ─── CloudMazeBall · 玉皇顶重力球 ─── */
+.cloud-maze-ball {
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, #ecfeff 0%, #38bdf8 42%, #0284c7 100%);
+  box-shadow:
+    0 0 14px rgba(0, 229, 255, 0.75),
+    inset 0 0 6px rgba(255, 255, 255, 0.45);
+  border: 1.5px solid rgba(255, 255, 255, 0.75);
+}
+
+.leyline-cell--swapping {
+  will-change: transform;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.leyline-grid--animating {
+  pointer-events: none;
+}
+
+.leyline-rules-banner {
+  border: 1px solid rgba(52, 211, 153, 0.22);
+  background: linear-gradient(
+    135deg,
+    rgba(6, 78, 59, 0.55) 0%,
+    rgba(15, 23, 42, 0.72) 55%,
+    rgba(6, 78, 59, 0.35) 100%
+  );
+  box-shadow: inset 0 0 20px rgba(52, 211, 153, 0.08);
+}
+
+/* ─── RiYue Tracing · 日月田高维锚定 ─── */
+.riyue-hotzone {
+  position: absolute;
+  touch-action: manipulation;
+  cursor: pointer;
+  background: transparent;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.riyue-hotzone--found {
+  pointer-events: none;
+  cursor: default;
+}
+
+.riyue-ar-totem-enter {
+  animation: riyue-ar-totem-enter 500ms ease-out forwards;
+}
+
+.riyue-radar-ring {
+  transform-box: view-box;
+  transform-origin: 50px 50px;
+  animation: spin 8s linear infinite;
+}
+
+@keyframes riyue-ar-totem-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.riyue-calibrator-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(0, 245, 255, 0.2);
+  accent-color: #00f5ff;
+}
+
+.riyue-calibrator-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #00f5ff;
+  background: #0b131a;
+  box-shadow: 0 0 8px rgba(0, 245, 255, 0.6);
+}
+
+/* legacy panorama selectors — kept for dist cache safety, unused */
+.riyue-panorama-viewport {
+  position: relative;
+  width: 100vw;
+  height: 60vh;
+  overflow: hidden;
+}
+
+.riyue-panorama-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  will-change: transform;
+}
+
+.riyue-panorama-image {
+  display: block;
+  height: 100%;
+  width: auto;
+  max-width: none;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.riyue-panorama-hotspots {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.riyue-panorama-hotspot {
+  position: absolute;
+  border-radius: 6px;
+  border: 1px dashed transparent;
+  transition: border-color 0.35s ease, box-shadow 0.35s ease, background 0.35s ease;
+}
+
+.riyue-panorama-hotspot--found {
+  border-color: rgba(253, 224, 71, 0.65);
+  background: rgba(253, 230, 138, 0.12);
+  box-shadow: 0 0 18px rgba(253, 224, 71, 0.35);
+}
+
+.riyue-panorama-hotspot--flash {
+  animation: riyue-hotspot-flash 0.6s ease-out forwards;
+}
+
+@keyframes riyue-hotspot-flash {
+  0% {
+    background: rgba(253, 230, 138, 0.45);
+    box-shadow: 0 0 28px rgba(253, 224, 71, 0.75);
+  }
+  100% {
+    background: rgba(253, 230, 138, 0.12);
+    box-shadow: 0 0 18px rgba(253, 224, 71, 0.35);
+  }
+}
+
+@keyframes wind-progress-flow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+@keyframes wind-progress-spark {
+  0%, 100% { opacity: 0.25; transform: translateX(0); }
+  50% { opacity: 0.85; transform: translateX(6px); }
+}
+
+.wind-riding-progress-fill {
+  background: linear-gradient(
+    90deg,
+    rgba(34, 211, 238, 0.55) 0%,
+    rgba(125, 211, 252, 0.95) 35%,
+    rgba(167, 243, 208, 0.85) 65%,
+    rgba(34, 211, 238, 0.55) 100%
+  );
+  background-size: 200% 100%;
+  animation: wind-progress-flow 2.4s linear infinite;
+  box-shadow:
+    0 0 14px rgba(34, 211, 238, 0.45),
+    inset 0 0 8px rgba(255, 255, 255, 0.2);
+  transition: width 0.55s ease-out;
+}
+
+.wind-riding-progress-wind::before,
+.wind-riding-progress-wind::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+  animation: wind-progress-spark 1.8s ease-in-out infinite;
+}
+
+.wind-riding-progress-wind::before {
+  left: 18%;
+}
+
+.wind-riding-progress-wind::after {
+  right: 22%;
+  animation-delay: 0.9s;
+}
+
+/* ─── WindBalanceGame · 御风引气重力平衡盘 ─── */
+@keyframes wind-balance-bg-drift {
+  0%, 100% { transform: scale(1.05) translateY(0); filter: brightness(0.85); }
+  50% { transform: scale(1.08) translateY(-1%); filter: brightness(1); }
+}
+
+@keyframes wind-balance-trap-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes wind-balance-ball-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(34, 211, 238, 0.55), 0 0 18px rgba(125, 211, 252, 0.35); }
+  50% { box-shadow: 0 0 16px rgba(34, 211, 238, 0.85), 0 0 28px rgba(125, 211, 252, 0.55); }
+}
+
+@keyframes wind-balance-target-pulse {
+  0%, 100% { box-shadow: 0 0 16px rgba(34, 211, 238, 0.45); }
+  50% { box-shadow: 0 0 28px rgba(34, 211, 238, 0.75), 0 0 40px rgba(167, 243, 208, 0.35); }
+}
+
+@keyframes wind-balance-burst {
+  0% {
+    opacity: 0;
+    background: radial-gradient(circle at 50% 50%, transparent 0%, transparent 70%);
+  }
+  45% {
+    opacity: 1;
+    background: radial-gradient(
+      circle at 50% 50%,
+      rgba(34, 211, 238, 0.55) 0%,
+      rgba(125, 211, 252, 0.25) 40%,
+      transparent 72%
+    );
+  }
+  100% {
+    opacity: 0.92;
+    background: radial-gradient(
+      circle at 50% 45%,
+      rgba(167, 243, 208, 0.7) 0%,
+      rgba(34, 211, 238, 0.2) 48%,
+      transparent 78%
+    );
+  }
+}
+
+@keyframes wind-balance-target-burst {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.35); }
+  100% { transform: translate(-50%, -50%) scale(1.1); }
+}
+
+.wind-balance-bg {
+  animation: wind-balance-bg-drift 6s ease-in-out infinite;
+}
+
+.wind-balance-trap {
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.55) 0%, rgba(127, 29, 29, 0.35) 55%, transparent 72%);
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.45), inset 0 0 12px rgba(0, 0, 0, 0.35);
+  animation: wind-balance-trap-spin 4s linear infinite;
+}
+
+.wind-balance-ball {
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ecfeff, #22d3ee 45%, #0891b2 100%);
+  animation: wind-balance-ball-glow 1.6s ease-in-out infinite;
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+.wind-balance-ball::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(125, 211, 252, 0.35), transparent 70%);
+  pointer-events: none;
+}
+
+.wind-balance-ball--captured {
+  opacity: 0.5;
+  animation: none;
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.4);
+}
+
+.wind-balance-target {
+  animation: wind-balance-target-pulse 2.2s ease-in-out infinite;
+}
+
+.wind-balance-target--burst {
+  animation: wind-balance-target-burst 0.9s ease-out forwards;
+}
+
+.wind-balance-victory-burst {
+  animation: wind-balance-burst 0.9s ease-out forwards;
+}
+
+.wind-balance-board--burst {
+  filter: saturate(1.25) brightness(1.08);
+}
+
+/* ─── CloudJumpGame · 云海跳跃（纯净物理循环） ─── */
+.cloud-jump-bg {
+  background-color: #7ec0e4;
+  background-image: url('/assets/cloud-leap-bg.png');
+  background-repeat: repeat-y;
+  background-size: 100% auto;
+  background-position: center 0;
+}
+
+.cloud-jump-bg-veil {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(15, 23, 42, 0.1) 100%
+  );
+}
+
+.cloud-jump-world {
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+.cloud-jump-player {
+  overflow: visible;
+  pointer-events: none;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.cloud-jump-player-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 6px rgba(15, 23, 42, 0.35));
+}
+
+.cloud-jump-platform {
+  position: absolute;
+  left: 0;
+  top: 0;
+  overflow: visible;
+  pointer-events: none;
+  background: transparent;
+  border: none;
+  will-change: transform;
+}
+
+.cloud-jump-platform-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  background: transparent;
+  border: none;
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+.cloud-jump-platform--fragile .cloud-jump-platform-img {
+  opacity: 0.62;
+  filter: grayscale(100%) brightness(0.92)
+    drop-shadow(0 0 6px rgba(148, 163, 184, 0.35));
+}
+
+.cloud-jump-milestone-toast {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.cloud-jump-milestone-toast--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ─── CloudLeapGame · 登云踏雾 ─── */
+.cloud-leap-bg-wrap {
+  z-index: 0;
+  background-color: #7ec0e4;
+  background-image: url('/assets/cloud-leap-bg.png');
+  background-repeat: repeat-y;
+  background-size: 100% auto;
+  background-position: center 0;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.cloud-leap-bg-veil {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(15, 23, 42, 0.08) 100%
+  );
+}
+
+.cloud-leap-world {
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+.cloud-leap-milestone-toast {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.cloud-leap-milestone-toast--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes cloud-leap-player-bob {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.55)); }
+  50% { filter: drop-shadow(0 0 14px rgba(125, 211, 252, 0.75)); }
+}
+
+@keyframes cloud-leap-spring-trail {
+  0%, 100% { box-shadow: 0 0 12px rgba(34, 211, 238, 0.45); }
+  50% { box-shadow: 0 0 22px rgba(34, 211, 238, 0.85), 0 0 36px rgba(125, 211, 252, 0.45); }
+}
+
+@keyframes cloud-leap-platform-spring {
+  0%, 100% { box-shadow: 0 0 10px rgba(34, 211, 238, 0.35); }
+  50% { box-shadow: 0 0 18px rgba(34, 211, 238, 0.65); }
+}
+
+@keyframes cloud-leap-fragile-particle-burst {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--tx), var(--ty), 0) scale(0.25);
+  }
+}
+
+@keyframes cloud-leap-fragile-mist-drift {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translateX(0);
+  }
+  50% {
+    opacity: 0.55;
+    transform: translateX(3px);
+  }
+}
+
+@keyframes cloud-leap-victory-burst {
+  0% {
+    opacity: 0;
+    background: radial-gradient(circle at 50% 35%, transparent 0%, transparent 70%);
+  }
+  45% {
+    opacity: 1;
+    background: radial-gradient(
+      circle at 50% 35%,
+      rgba(34, 211, 238, 0.6) 0%,
+      rgba(125, 211, 252, 0.28) 42%,
+      transparent 72%
+    );
+  }
+  100% {
+    opacity: 0.92;
+    background: radial-gradient(
+      circle at 50% 30%,
+      rgba(167, 243, 208, 0.75) 0%,
+      rgba(34, 211, 238, 0.22) 48%,
+      transparent 78%
+    );
+  }
+}
+
+.cloud-leap-player {
+  filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.55));
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.cloud-leap-player-emoji {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.cloud-leap-platform {
+  position: absolute;
+  left: 0;
+  top: 0;
+  overflow: visible;
+  pointer-events: none;
+  contain: layout style;
+  background-color: transparent;
+  border: none;
+  outline: none;
+}
+
+.cloud-leap-platform-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  image-rendering: auto;
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+  background-color: transparent;
+  border: none;
+  outline: none;
+}
+
+.cloud-leap-platform--spring .cloud-leap-platform-img {
+  filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.5));
+}
+
+.cloud-leap-platform--fragile .cloud-leap-platform-img {
+  opacity: 0.6;
+  filter: saturate(0.52) brightness(0.92) hue-rotate(-14deg)
+    drop-shadow(0 0 7px rgba(148, 163, 184, 0.38));
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.55) 10%,
+    #000 22%,
+    #000 78%,
+    rgba(0, 0, 0, 0.5) 90%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.55) 10%,
+    #000 22%,
+    #000 78%,
+    rgba(0, 0, 0, 0.5) 90%,
+    transparent 100%
+  );
+}
+
+.cloud-leap-platform-fragile-veil {
+  position: absolute;
+  inset: 8% 6% 18% 6%;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 42%,
+    rgba(148, 163, 184, 0.22) 0%,
+    rgba(100, 116, 139, 0.14) 42%,
+    transparent 72%
+  );
+  mix-blend-mode: multiply;
+}
+
+.cloud-leap-platform-cracks {
+  position: absolute;
+  inset: 14% 10% 22% 10%;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      118deg,
+      transparent 44%,
+      rgba(148, 163, 184, 0.55) 46%,
+      transparent 48%
+    ),
+    linear-gradient(
+      62deg,
+      transparent 38%,
+      rgba(148, 163, 184, 0.45) 40%,
+      transparent 42%
+    ),
+    linear-gradient(
+      -28deg,
+      transparent 52%,
+      rgba(100, 116, 139, 0.4) 54%,
+      transparent 56%
+    );
+  opacity: 0.75;
+}
+
+.cloud-leap-platform-mist-edge {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 20px rgba(148, 163, 184, 0.28),
+    inset 8px 0 12px rgba(255, 255, 255, 0.12),
+    inset -8px 0 12px rgba(255, 255, 255, 0.1),
+    0 0 12px rgba(148, 163, 184, 0.22);
+  animation: cloud-leap-fragile-mist-drift 2.8s ease-in-out infinite;
+}
+
+.cloud-leap-platform--fragile-hit {
+  pointer-events: none;
+}
+
+.cloud-leap-platform--fragile-hit .cloud-leap-platform-img {
+  filter: saturate(0.35) brightness(1.15) hue-rotate(-8deg);
+}
+
+.cloud-leap-fragile-particle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  margin-top: -3.5px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 35% 35%,
+    rgba(241, 245, 249, 0.95) 0%,
+    rgba(148, 163, 184, 0.55) 55%,
+    rgba(100, 116, 139, 0.15) 100%
+  );
+  box-shadow: 0 0 6px rgba(186, 230, 253, 0.35);
+  animation: cloud-leap-fragile-particle-burst 0.42s ease-out forwards;
+  will-change: transform, opacity;
+}
+
+.cloud-leap-platform--goal .cloud-leap-platform-img {
+  filter: drop-shadow(0 0 12px rgba(34, 211, 238, 0.55));
+}
+
+.cloud-leap-totem {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  margin-bottom: 6px;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid rgba(34, 211, 238, 0.55);
+  background: radial-gradient(circle, rgba(8, 47, 73, 0.85), rgba(2, 6, 23, 0.95));
+  box-shadow: 0 0 24px rgba(34, 211, 238, 0.45);
+  overflow: hidden;
+}
+
+.cloud-leap-totem-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.9;
+}
+
+.cloud-leap-victory-burst {
+  animation: cloud-leap-victory-burst 0.9s ease-out forwards;
+}
+
+/* 深渊太鼓 · 四轨节奏 */
+.abyss-rhythm-arena {
+  background: linear-gradient(180deg, #040c18 0%, #061428 45%, #0a1e38 100%);
+}
+
+.abyss-lanes-grid,
+.abyss-pools-grid {
+  width: 100%;
+}
+
+.abyss-pools-grid {
+  place-items: center;
+}
+
+.abyss-lane-strip {
+  background: linear-gradient(
+    180deg,
+    rgba(14, 116, 144, 0.04) 0%,
+    rgba(14, 116, 144, 0.1) 55%,
+    rgba(8, 47, 73, 0.08) 100%
+  );
+}
+
+.abyss-lane-strip--alt {
+  background: linear-gradient(
+    180deg,
+    rgba(56, 189, 248, 0.03) 0%,
+    rgba(56, 189, 248, 0.08) 55%,
+    rgba(12, 74, 110, 0.06) 100%
+  );
+}
+
+.abyss-hit-pool {
+  position: relative;
+  z-index: 2;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px solid rgba(94, 234, 212, 0.45);
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.2) 0%, rgba(8, 47, 73, 0.15) 70%);
+  box-shadow:
+    0 0 20px rgba(56, 189, 248, 0.25),
+    inset 0 0 12px rgba(94, 234, 212, 0.15);
+}
+
+.abyss-hit-pool--interactive {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.abyss-hit-pool--interactive:active {
+  transform: scale(0.92);
+  box-shadow:
+    0 0 28px rgba(94, 234, 212, 0.45),
+    inset 0 0 16px rgba(94, 234, 212, 0.25);
+}
+
+.abyss-note {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #e0f7ff 0%, #38bdf8 45%, #0ea5e9 100%);
+  box-shadow:
+    0 0 14px rgba(56, 189, 248, 0.65),
+    0 0 4px rgba(224, 247, 255, 0.8);
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+.abyss-judgment {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 4;
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 8px currentColor;
+  pointer-events: none;
+}
+
+@keyframes gorge-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
+  }
+}
+
+/* ─── OfflineCave · 地心潜航重连 ─── */
+
+@keyframes cave-compass-idle {
+  0%,
+  100% {
+    opacity: 0.28;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.42;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes cave-magnetic-shake {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  20% {
+    transform: translate(calc(var(--cave-shake, 1px) * -1), calc(var(--cave-shake, 1px) * 0.5))
+      rotate(calc(var(--cave-shake, 1px) * -0.15deg));
+  }
+  40% {
+    transform: translate(calc(var(--cave-shake, 1px) * 1), calc(var(--cave-shake, 1px) * -1))
+      rotate(calc(var(--cave-shake, 1px) * 0.12deg));
+  }
+  60% {
+    transform: translate(calc(var(--cave-shake, 1px) * -0.6), calc(var(--cave-shake, 1px) * 0.8))
+      rotate(calc(var(--cave-shake, 1px) * -0.08deg));
+  }
+  80% {
+    transform: translate(calc(var(--cave-shake, 1px) * 0.8), calc(var(--cave-shake, 1px) * -0.4))
+      rotate(calc(var(--cave-shake, 1px) * 0.1deg));
+  }
+}
+
+@keyframes cave-bg-pulse {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: calc(var(--cave-progress, 0) * 0.35);
+  }
+}
+
+@keyframes scrollUp {
+  from {
+    transform: translateY(60%);
+  }
+  to {
+    transform: translateY(-120%);
+  }
+}
+
+.ending-credits-scroll {
+  animation: scrollUp 20s linear forwards;
+}
+
+/* ─── 灵域操作系统 · ImageGen 视觉资产与共享任务皮肤 ─── */
+.compass-os-shell,
+.quest-catalog-shell {
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 50% -8%, rgba(72, 177, 159, 0.16), transparent 34%),
+    linear-gradient(180deg, #061116 0%, #041014 52%, #02090d 100%);
+}
+
+.compass-os-shell::before,
+.quest-catalog-shell::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  content: '';
+  background:
+    linear-gradient(180deg, rgba(2, 9, 13, 0.18) 0%, rgba(2, 9, 13, 0.72) 58%, #02090d 100%),
+    url('/assets/generated/realm-quest-stage-v2.jpg') center 16% / cover no-repeat;
+  opacity: 0.38;
+  filter: saturate(0.72) contrast(1.04);
+}
+
+.compass-os-shell::after,
+.quest-catalog-shell::after {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  content: '';
+  background:
+    linear-gradient(90deg, rgba(2, 9, 13, 0.7), transparent 13%, transparent 87%, rgba(2, 9, 13, 0.7)),
+    radial-gradient(circle at 50% 28%, transparent 0 28%, rgba(2, 9, 13, 0.48) 76%);
+}
+
+.compass-os-shell > .pointer-events-none.absolute.inset-0,
+.quest-catalog-shell > .pointer-events-none.absolute.inset-0 {
+  z-index: 1;
+  opacity: 0.48;
+}
+
+.realm-experience-shell:not(.landing-shell):not(.register-shell):not(.compass-os-shell):not(.quest-catalog-shell) {
+  isolation: isolate;
+  background: #030d11;
+}
+
+.realm-experience-shell:not(.landing-shell):not(.register-shell):not(.compass-os-shell):not(.quest-catalog-shell)::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  content: '';
+  background:
+    linear-gradient(180deg, rgba(3, 13, 17, 0.58), rgba(3, 13, 17, 0.86)),
+    url('/assets/generated/realm-quest-stage-v2.jpg') center 20% / cover no-repeat;
+  opacity: 0.42;
+  filter: saturate(0.7) contrast(1.06);
+}
+
+.realm-experience-shell:not(.landing-shell):not(.register-shell):not(.compass-os-shell):not(.quest-catalog-shell)
+  > .pointer-events-none.absolute.inset-0 {
+  z-index: 1;
+  opacity: 0.58;
+}
+
+.realm-status-bar {
+  margin: 0 10px 10px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  border-bottom: 1px solid rgba(232, 197, 71, 0.16);
+  border-radius: 0 0 18px 18px;
+  background: linear-gradient(180deg, rgba(4, 13, 18, 0.9), rgba(8, 29, 34, 0.72));
+  box-shadow:
+    inset 0 -1px 0 rgba(94, 234, 196, 0.05),
+    0 12px 32px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(18px);
+}
+
+.realm-compass-section {
+  position: relative;
+  overflow: hidden;
+  padding: 13px 12px 17px;
+  border: 1px solid rgba(232, 197, 71, 0.2);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(45, 212, 168, 0.08), transparent 52%),
+    linear-gradient(150deg, rgba(13, 39, 43, 0.75), rgba(4, 13, 18, 0.86));
+  box-shadow:
+    inset 0 1px 0 rgba(253, 230, 138, 0.08),
+    0 18px 44px rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(16px);
+}
+
+.realm-compass-section::before,
+.realm-compass-section::after {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  pointer-events: none;
+  content: '';
+  border-color: rgba(232, 197, 71, 0.42);
+}
+
+.realm-compass-section::before {
+  top: 7px;
+  left: 7px;
+  border-top: 1px solid;
+  border-left: 1px solid;
+  border-radius: 13px 0 0;
+}
+
+.realm-compass-section::after {
+  right: 7px;
+  bottom: 7px;
+  border-right: 1px solid;
+  border-bottom: 1px solid;
+  border-radius: 0 0 13px;
+}
+
+.realm-compass {
+  isolation: isolate;
+  filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.45));
+}
+
+.realm-compass::before {
+  position: absolute;
+  inset: 4px;
+  z-index: 0;
+  pointer-events: none;
+  content: '';
+  border: 1px solid rgba(253, 230, 138, 0.3);
+  border-radius: 999px;
+  box-shadow:
+    0 0 0 5px rgba(3, 17, 21, 0.8),
+    0 0 0 6px rgba(45, 212, 168, 0.14),
+    0 0 34px rgba(45, 212, 168, 0.16),
+    inset 0 0 28px rgba(4, 13, 18, 0.78);
+}
+
+.realm-compass-art {
+  z-index: 0;
+  overflow: hidden;
+  border: 1px solid rgba(94, 234, 196, 0.24);
+  background: url('/assets/generated/realm-compass-core-v2.jpg') center / cover no-repeat;
+  filter: saturate(0.82) contrast(1.08) brightness(0.78);
+  box-shadow: inset 0 0 32px rgba(2, 9, 13, 0.72);
+}
+
+.realm-compass-shade {
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 0 25%, rgba(4, 18, 22, 0.12) 47%, rgba(2, 9, 13, 0.82) 100%),
+    conic-gradient(from 15deg, rgba(232, 197, 71, 0.04), transparent 18%, rgba(45, 212, 168, 0.08), transparent 62%, rgba(232, 197, 71, 0.06));
+}
+
+.realm-compass-ensemble {
+  isolation: isolate;
+}
+
+.realm-compass-dial {
+  z-index: 10;
+}
+
+.realm-compass-dial::after {
+  position: absolute;
+  inset: 19px;
+  z-index: 2;
+  pointer-events: none;
+  content: '';
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, rgba(253, 230, 138, 0.52), transparent 20%) left top / 44px 1px no-repeat,
+    linear-gradient(rgba(253, 230, 138, 0.52), transparent 20%) left top / 1px 44px no-repeat,
+    linear-gradient(270deg, rgba(94, 234, 196, 0.48), transparent 20%) right bottom / 44px 1px no-repeat,
+    linear-gradient(0deg, rgba(94, 234, 196, 0.48), transparent 20%) right bottom / 1px 44px no-repeat;
+  opacity: 0.72;
+}
+
+.realm-compass-hub {
+  box-shadow:
+    0 0 0 4px rgba(3, 13, 17, 0.74),
+    0 0 0 5px rgba(232, 197, 71, 0.14),
+    0 0 22px rgba(45, 212, 168, 0.2),
+    inset 0 1px 0 rgba(253, 230, 138, 0.12);
+}
+
+.realm-compass-signal {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  border: 1px solid rgba(94, 184, 200, 0.15);
+  border-radius: 999px;
+  background: rgba(3, 13, 17, 0.78);
+  padding: 3px 7px;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: rgba(148, 184, 200, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.realm-compass-signal > span {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: #5a7a8a;
+  box-shadow: 0 0 0 2px rgba(90, 122, 138, 0.12);
+}
+
+.realm-compass-signal > span.is-active {
+  background: #5eecc4;
+  box-shadow: 0 0 8px rgba(94, 236, 196, 0.78);
+}
+
+.realm-compass-spirit {
+  position: absolute;
+  top: 0;
+  right: -2px;
+  z-index: 30;
+  width: 132px;
+  height: 232px;
+  pointer-events: none;
+}
+
+.realm-spirit-dialogue {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  width: 124px;
+  min-height: 43px;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 9px;
+  border: 1px solid rgba(232, 197, 71, 0.28);
+  border-radius: 13px 13px 4px 13px;
+  background: linear-gradient(145deg, rgba(13, 39, 43, 0.94), rgba(3, 13, 17, 0.94));
+  box-shadow:
+    inset 0 1px 0 rgba(253, 230, 138, 0.08),
+    0 9px 24px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(12px);
+}
+
+.realm-spirit-dialogue::after {
+  position: absolute;
+  right: 18px;
+  bottom: -6px;
+  width: 11px;
+  height: 11px;
+  content: '';
+  border-right: 1px solid rgba(232, 197, 71, 0.24);
+  border-bottom: 1px solid rgba(232, 197, 71, 0.24);
+  background: #061518;
+  transform: rotate(45deg);
+}
+
+.realm-spirit-dialogue p {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 11px;
+  line-height: 1.1;
+  letter-spacing: 0.13em;
+  color: #fde68a;
+}
+
+.realm-spirit-dialogue span:not(.realm-spirit-status-dot) {
+  display: block;
+  margin-top: 3px;
+  white-space: nowrap;
+  font-size: 8px;
+  line-height: 1;
+  color: rgba(148, 184, 200, 0.82);
+}
+
+.realm-spirit-status-dot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #5a7a8a;
+  box-shadow: 0 0 0 3px rgba(90, 122, 138, 0.12);
+}
+
+.realm-spirit-status-dot.is-active {
+  background: #5eecc4;
+  box-shadow:
+    0 0 0 3px rgba(94, 236, 196, 0.12),
+    0 0 11px rgba(94, 236, 196, 0.72);
+}
+
+.realm-spirit-portrait {
+  position: absolute;
+  top: 47px;
+  right: 1px;
+  width: 116px;
+  height: 176px;
+}
+
+.realm-spirit-portrait img {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter:
+    drop-shadow(0 13px 12px rgba(0, 0, 0, 0.52))
+    drop-shadow(0 0 8px rgba(232, 197, 71, 0.12));
+}
+
+.realm-spirit-aura {
+  position: absolute;
+  top: 36px;
+  left: 50%;
+  z-index: 0;
+  width: 95px;
+  height: 95px;
+  border: 1px solid rgba(94, 236, 196, 0.15);
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(45, 212, 168, 0.16), transparent 66%);
+  box-shadow:
+    0 0 26px rgba(45, 212, 168, 0.1),
+    inset 0 0 20px rgba(232, 197, 71, 0.05);
+  transform: translateX(-50%);
+}
+
+.realm-spirit-bearing {
+  position: absolute;
+  right: 5px;
+  bottom: 0;
+  z-index: 4;
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  border: 1px solid rgba(94, 236, 196, 0.2);
+  border-radius: 999px;
+  background: rgba(3, 13, 17, 0.9);
+  padding: 4px 9px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(10px);
+}
+
+.realm-spirit-bearing span {
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: #5a7a8a;
+}
+
+.realm-spirit-bearing strong {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: #5eecc4;
+}
+
+.realm-compass-hint {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid rgba(232, 197, 71, 0.2);
+  border-radius: 12px;
+  background: linear-gradient(90deg, rgba(12, 38, 42, 0.92), rgba(3, 13, 17, 0.92));
+  padding: 7px 10px;
+  box-shadow:
+    inset 0 1px 0 rgba(253, 230, 138, 0.05),
+    0 10px 22px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+}
+
+.realm-compass-hint > span {
+  flex: 0 0 auto;
+  border-right: 1px solid rgba(232, 197, 71, 0.2);
+  padding-right: 8px;
+  font-size: 8px;
+  letter-spacing: 0.22em;
+  color: #e8c547;
+}
+
+.realm-compass-hint p {
+  overflow: hidden;
+  margin: 0;
+  color: rgba(232, 244, 248, 0.8);
+  font-size: 9px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.realm-info-panel,
+.realm-quest-window {
+  border-color: rgba(232, 197, 71, 0.2) !important;
+  background:
+    linear-gradient(145deg, rgba(12, 38, 42, 0.83), rgba(4, 15, 20, 0.9)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(253, 230, 138, 0.07),
+    0 18px 42px rgba(0, 0, 0, 0.35) !important;
+}
+
+.realm-info-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.realm-info-panel::after {
+  position: absolute;
+  top: 0;
+  right: 12%;
+  left: 12%;
+  height: 1px;
+  pointer-events: none;
+  content: '';
+  background: linear-gradient(90deg, transparent, rgba(94, 234, 196, 0.54), transparent);
+}
+
+.realm-map-frame {
+  padding: 3px;
+  border: 1px solid rgba(232, 197, 71, 0.2);
+  border-radius: 19px;
+  background: linear-gradient(145deg, rgba(253, 230, 138, 0.06), rgba(45, 212, 168, 0.08));
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.34);
+}
+
+.realm-map-frame .task-map {
+  border-color: rgba(94, 234, 196, 0.2);
+  border-radius: 16px;
+  filter: saturate(0.8) contrast(1.08);
+}
+
+.realm-map-frame .task-map::after {
+  position: absolute;
+  inset: 0;
+  z-index: 900;
+  pointer-events: none;
+  content: '';
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 32px rgba(2, 9, 13, 0.72),
+    inset 0 0 0 1px rgba(232, 197, 71, 0.08);
+}
+
+.realm-jump-console {
+  position: relative;
+  background:
+    linear-gradient(90deg, rgba(45, 212, 168, 0.07), transparent 18%, transparent 82%, rgba(232, 197, 71, 0.05)),
+    rgba(4, 14, 18, 0.68) !important;
+}
+
+.realm-jump-console::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  pointer-events: none;
+  content: '';
+  background: linear-gradient(180deg, transparent, #2dd4a8, transparent);
+  opacity: 0.6;
+}
+
+.realm-stage-frame {
+  isolation: isolate;
+  border-color: rgba(232, 197, 71, 0.2) !important;
+  border-radius: 18px !important;
+  background: #031015 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(94, 234, 196, 0.05),
+    0 20px 48px rgba(0, 0, 0, 0.42);
+}
+
+.realm-stage-frame::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  content: '';
+  background:
+    linear-gradient(180deg, rgba(3, 16, 21, 0.28), rgba(3, 16, 21, 0.72) 58%, #031015 100%),
+    url('/assets/generated/realm-quest-stage-v2.jpg') center top / cover no-repeat;
+  opacity: 0.5;
+  filter: saturate(0.68) contrast(1.08);
+}
+
+.realm-stage-frame > * {
+  position: relative;
+  z-index: 1;
+}
+
+.realm-stage-header {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  border-color: rgba(232, 197, 71, 0.13) !important;
+  background: linear-gradient(90deg, rgba(8, 35, 37, 0.9), rgba(4, 14, 18, 0.75));
+  box-shadow: inset 0 -1px 0 rgba(94, 234, 196, 0.04);
+  backdrop-filter: blur(14px);
+}
+
+.quest-stage-content {
+  position: relative;
+  isolation: isolate;
+  background-image:
+    linear-gradient(180deg, rgba(3, 16, 21, 0.08), rgba(3, 16, 21, 0.38)),
+    radial-gradient(circle at 50% 14%, rgba(94, 234, 196, 0.07), transparent 42%);
+}
+
+.quest-stage-content h3 {
+  font-family: var(--font-display);
+  letter-spacing: 0.08em;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.82);
+}
+
+.quest-stage-content button:not([class*='absolute']) {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 8px 22px rgba(0, 0, 0, 0.26);
+}
+
+.quest-catalog-shell .mythic-panel,
+.quest-catalog-shell .glass-panel {
+  border-color: rgba(232, 197, 71, 0.18);
+  background: linear-gradient(145deg, rgba(12, 38, 42, 0.82), rgba(4, 15, 20, 0.9));
+  box-shadow:
+    inset 0 1px 0 rgba(253, 230, 138, 0.06),
+    0 16px 38px rgba(0, 0, 0, 0.34);
+}
+
+.immersive-task-shell {
+  isolation: isolate;
+  background:
+    linear-gradient(180deg, rgba(2, 9, 13, 0.22), rgba(2, 9, 13, 0.72)),
+    url('/assets/generated/realm-quest-stage-v2.jpg') center / cover no-repeat !important;
+}
+
+.immersive-task-shell::after {
+  position: fixed;
+  inset: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom));
+  z-index: 99999;
+  pointer-events: none;
+  content: '';
+  border: 1px solid rgba(232, 197, 71, 0.22);
+  border-radius: 20px;
+  background:
+    linear-gradient(90deg, rgba(94, 234, 196, 0.52), rgba(94, 234, 196, 0.52)) left top / 28px 1px no-repeat,
+    linear-gradient(rgba(94, 234, 196, 0.52), rgba(94, 234, 196, 0.52)) left top / 1px 28px no-repeat,
+    linear-gradient(90deg, rgba(232, 197, 71, 0.48), rgba(232, 197, 71, 0.48)) right bottom / 28px 1px no-repeat,
+    linear-gradient(rgba(232, 197, 71, 0.48), rgba(232, 197, 71, 0.48)) right bottom / 1px 28px no-repeat;
+  box-shadow:
+    inset 0 0 42px rgba(2, 9, 13, 0.45),
+    0 0 24px rgba(45, 212, 168, 0.07);
+}
+
+.realm-standalone-stage {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(3, 13, 17, 0.64), rgba(3, 13, 17, 0.93)),
+    url('/assets/generated/realm-quest-stage-v2.jpg') center / cover no-repeat !important;
+}
+
+.realm-standalone-stage::before {
+  position: absolute;
+  inset: 8px;
+  z-index: 0;
+  pointer-events: none;
+  content: '';
+  border: 1px solid rgba(232, 197, 71, 0.18);
+  border-radius: 20px;
+  box-shadow: inset 0 0 40px rgba(2, 9, 13, 0.5);
+}
+
+.realm-standalone-stage > * {
+  position: relative;
+  z-index: 1;
+}
+
+.realm-standalone-title {
+  font-family: var(--font-display);
+  letter-spacing: 0.18em;
+  color: #fde68a;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.8);
+}
+
+.collection-shell .spirit-catalog-card {
+  box-shadow:
+    inset 0 1px 0 rgba(253, 230, 138, 0.05),
+    0 14px 32px rgba(0, 0, 0, 0.34);
+}
+
+.collection-shell .spirit-catalog-card:nth-child(7) {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: calc(50% - 6px);
+}
+
+.collection-shell .spirit-catalog-art::after {
+  position: absolute;
+  inset: 5px;
+  z-index: 2;
+  pointer-events: none;
+  content: '';
+  border: 1px solid rgba(253, 230, 138, 0.1);
+  border-radius: 11px;
+  box-shadow: inset 0 0 20px rgba(3, 13, 17, 0.18);
+}
+
+/* 百灵收藏专属徽记：七灵珠羽印 */
+.collection-emblem-button,
+.collection-emblem-frame {
+  position: relative;
+  isolation: isolate;
+  flex: 0 0 auto;
+  border: 1px solid rgba(232, 197, 71, 0.34);
+  background:
+    radial-gradient(circle at 50% 38%, rgba(94, 236, 196, 0.16), transparent 56%),
+    linear-gradient(145deg, rgba(12, 42, 43, 0.94), rgba(3, 13, 17, 0.96));
+  box-shadow:
+    inset 0 1px 0 rgba(253, 230, 138, 0.12),
+    inset 0 0 16px rgba(45, 212, 168, 0.06),
+    0 0 0 1px rgba(45, 212, 168, 0.05),
+    0 8px 22px rgba(0, 0, 0, 0.32);
+}
+
+.collection-emblem-button {
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.collection-emblem-button::before {
+  position: absolute;
+  inset: -4px;
+  z-index: -1;
+  pointer-events: none;
+  content: '';
+  border: 1px solid rgba(94, 236, 196, 0.12);
+  border-radius: inherit;
+  animation: collection-emblem-pulse 2.8s ease-in-out infinite;
+}
+
+.collection-emblem-button:active {
+  transform: scale(0.92);
+  border-color: rgba(253, 230, 138, 0.6);
+  box-shadow:
+    inset 0 0 18px rgba(45, 212, 168, 0.12),
+    0 0 20px rgba(45, 212, 168, 0.16);
+}
+
+.collection-emblem-frame {
+  border-radius: 14px;
+}
+
+.spirit-collection-icon {
+  display: block;
+  overflow: visible;
+  filter:
+    drop-shadow(0 0 4px rgba(94, 236, 196, 0.25))
+    drop-shadow(0 2px 5px rgba(0, 0, 0, 0.42));
+}
+
+.spirit-collection-orbit {
+  transform-origin: 24px 24px;
+  animation: collection-orbit-breathe 4.2s ease-in-out infinite;
+}
+
+@keyframes collection-emblem-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 0.82;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes collection-orbit-breathe {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collection-emblem-button::before,
+  .spirit-collection-orbit {
+    animation: none;
+  }
+}
+
+@media (max-width: 370px) {
+  .realm-compass-ensemble {
+    height: 260px;
+  }
+
+  .realm-compass-dial {
+    left: -3px;
+    transform: scale(0.92);
+    transform-origin: left top;
+  }
+
+  .realm-compass-spirit {
+    right: -8px;
+    transform: scale(0.92);
+    transform-origin: right top;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .realm-compass {
+    filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.4));
+  }
+
+  .realm-spirit-portrait img {
+    transition: none;
+  }
+}
